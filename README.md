@@ -2,7 +2,7 @@
 
 <table>
   <tr>
-    <td><img src="https://github.com/thehelmsdeep/sliderflow/raw/ashkanparhizi/01.gif" alt="a" width="200"></td>
+    <td><img src="https://raw.githubusercontent.com/thehelmsdeep/sliderflow/refs/heads/master/01.gif" alt="" width="200"></td>
   </tr>
 </table>
 
