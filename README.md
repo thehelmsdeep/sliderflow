@@ -5,7 +5,7 @@ awesome_gauge is a package for build gauge.
 
 <table>
   <tr>
-    <td><img src="https://github.com/thehelmsdeep/sliderflow/raw/Ashkan/01.gif" alt="" width="200"></td>
+    <td><img src="https://github.com/thehelmsdeep/sliderflow/raw/ashkanparhizi/01.gif" alt="" width="200"></td>
   </tr>
 </table>
 
@@ -14,9 +14,9 @@ awesome_gauge is a package for build gauge.
 
 ```dart
  SliderFlow(
-count: 10,
-onActiveCountChanged: (numberOfActives)=> print('$numberOfActives'),
-)
+  count: 10,
+  onActiveCountChanged: (numberOfActives)=> print('$numberOfActives'),
+  )
 ```
 
 
