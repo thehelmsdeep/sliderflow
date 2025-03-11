@@ -1,5 +1,4 @@
 
-## Features
 
 <table>
   <tr>
@@ -8,7 +7,6 @@
 </table>
 
 
-## Curve example
 
 ```dart
  SliderFlow(
