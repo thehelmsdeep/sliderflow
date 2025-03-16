@@ -1,7 +1,7 @@
 name: sliderflow
 description: "It's a futuristic slider widget."
 version: 1.0.0
-homepage: https://github.com/thehelmsdeep/sliderflow
+homepage: https://github.com/thehelmsdeep/sliderflow.git
 
 environment:
   sdk: ^3.5.3
