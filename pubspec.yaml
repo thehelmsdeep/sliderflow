@@ -1,11 +1,10 @@
 name: sliderflow
 description: "It's a futuristic slider widget."
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/thehelmsdeep/sliderflow
 
 environment:
-  sdk: ^3.5.3
-  flutter: ">=1.17.0"
+  sdk: ^3.8.1
 
 dependencies:
   flutter:
