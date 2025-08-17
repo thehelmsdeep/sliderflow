@@ -1,25 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+class SliderFlowTheme {
+  final Color? activeItemColor;
+  final Color? inactiveItemColor;
+  final double? borderRadius;
+  final Color? verticalLineColor;
+  final double? verticalLineWidth;
+  final TextStyle? labelTextStyle;
+  final TextStyle? itemTextStyle;
+
+  const SliderFlowTheme({
+    this.activeItemColor,
+    this.inactiveItemColor,
+    this.borderRadius,
+    this.verticalLineColor,
+    this.verticalLineWidth,
+    this.labelTextStyle,
+    this.itemTextStyle,
+  });
+}
+
+
+
 class SliderFlow extends StatefulWidget {
   final int count;
-  final Color? activeColor;
-  final Color? inactiveColor;
   final Color? backgroundColor;
-  final TextStyle? textStyle;
-  final double borderRadiusValue;
-  final ValueChanged<int> onActiveCountChanged;
+  final ValueChanged<int> onChanged;
+  final String? label;
+  final SliderFlowTheme? theme;
+  final List<String>? itemLabels;
 
   const SliderFlow({
     super.key,
     required this.count,
-    required this.onActiveCountChanged,
+    required this.onChanged,
     this.backgroundColor,
-    this.activeColor,
-    this.inactiveColor,
-    this.textStyle,
-    this.borderRadiusValue = 4,
-  });
+    this.label,
+    this.theme,
+    this.itemLabels
+  }): assert(itemLabels == null || itemLabels.length == count, 'itemLabels length must match count');
 
   @override
   State<SliderFlow> createState() => _SliderFlowState();
@@ -41,16 +61,15 @@ class _SliderFlowState extends State<SliderFlow>
       _lastActiveCount = activeCount;
       _activeItems = List.generate(widget.count, (i) => i < activeCount);
       HapticFeedback.selectionClick();
-      widget.onActiveCountChanged(activeCount);
+      widget.onChanged(activeCount);
       setState(() {});
     }
   }
 
   void _updateFromDrag(Offset localPosition, double maxHeight) {
     final normalized = 1 - (localPosition.dy / maxHeight);
-    final activeCount = (normalized * widget.count)
-        .clamp(0, widget.count)
-        .round();
+    final activeCount =
+    (normalized * widget.count).clamp(0, widget.count).round();
     _setActiveCount(activeCount);
   }
 
@@ -63,49 +82,87 @@ class _SliderFlowState extends State<SliderFlow>
     final Color bgColor =
         widget.backgroundColor ?? theme.colorScheme.surfaceVariant;
     final Color activeColor =
-        widget.activeColor ?? theme.colorScheme.primary;
-    final Color inactiveColor =
-        widget.inactiveColor ?? theme.colorScheme.onSurface.withOpacity(0.4);
-    final TextStyle labelStyle =
-        widget.textStyle ?? theme.textTheme.bodySmall ?? const TextStyle();
+        widget.theme?.activeItemColor ?? theme.colorScheme.primary;
+    final Color inactiveColor = widget.theme?.inactiveItemColor ??
+        theme.colorScheme.onSurface.withOpacity(0.4);
+    final double borderRadiusValue = widget.theme?.borderRadius ?? 4;
+    final Color verticalLineColor =
+        widget.theme?.verticalLineColor ?? inactiveColor;
+    final double verticalLineWidth = widget.theme?.verticalLineWidth ?? 1;
 
-    return Container(
-      width: 70,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(widget.borderRadiusValue * 2),
-      ),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onVerticalDragUpdate: (details) {
-          final box = context.findRenderObject() as RenderBox;
-          final localOffset = box.globalToLocal(details.globalPosition);
-          _updateFromDrag(localOffset, box.size.height);
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(widget.count, (index) {
-            final bool isActive = _activeItems[index];
-            return GestureDetector(
-              onTap: () => _setActiveCount(index + 1),
-              child: _SliderFlowItem(
-                index: index,
-                isActive: isActive,
-                isEndItem: _isEndItem(index),
-                currentValue: _lastActiveCount,
-                activeColor: activeColor,
-                inactiveColor: inactiveColor,
-                textStyle: labelStyle,
-                borderRadiusValue: widget.borderRadiusValue,
+
+    final TextStyle labelStyle = widget.theme?.labelTextStyle ??
+        theme.textTheme.bodyMedium ??
+        const TextStyle();
+    final TextStyle itemStyle = widget.theme?.itemTextStyle ??
+        theme.textTheme.bodySmall ??
+        const TextStyle();
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IntrinsicWidth(
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(borderRadiusValue * 2),
+            ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragUpdate: (details) {
+                final box = context.findRenderObject() as RenderBox;
+                final localOffset = box.globalToLocal(details.globalPosition);
+                _updateFromDrag(localOffset, box.size.height);
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(widget.count, (index) {
+                  final bool isActive = _activeItems[index];
+                  return GestureDetector(
+                    onTap: () => _setActiveCount(index + 1),
+                    child: _SliderFlowItem(
+                      index: index,
+                      isActive: isActive,
+                      isEndItem: _isEndItem(index),
+                      currentValue: _lastActiveCount,
+                      activeColor: activeColor,
+                      inactiveColor: inactiveColor,
+                      textStyle: itemStyle,
+                      borderRadiusValue: borderRadiusValue,
+                      verticalLineColor: verticalLineColor,
+                      verticalLineWidth: verticalLineWidth,
+                      itemLabel: widget.itemLabels != null
+                          ? widget.itemLabels![index]
+                          : '${index + 1}',
+
+                    ),
+                  );
+                }).reversed.toList(),
               ),
-            );
-          }).reversed.toList(),
+            ),
+          ),
         ),
-      ),
+        if (widget.label != null)
+          Positioned(
+            bottom: 8,
+            left: -24,
+            child: RotatedBox(
+              quarterTurns: 3,
+              child: Text(
+                widget.label!,
+                style: labelStyle,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
+
+
+
+
 
 class _SliderFlowItem extends StatefulWidget {
   final int index;
@@ -116,6 +173,9 @@ class _SliderFlowItem extends StatefulWidget {
   final Color inactiveColor;
   final TextStyle textStyle;
   final double borderRadiusValue;
+  final Color verticalLineColor;
+  final double verticalLineWidth;
+  final String itemLabel;
 
   const _SliderFlowItem({
     required this.index,
@@ -126,6 +186,9 @@ class _SliderFlowItem extends StatefulWidget {
     required this.inactiveColor,
     required this.textStyle,
     required this.borderRadiusValue,
+    required this.verticalLineColor,
+    required this.verticalLineWidth,
+    required this.itemLabel,
   });
 
   @override
@@ -141,7 +204,7 @@ class _SliderFlowItemState extends State<_SliderFlowItem>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 400),
     )..repeat(reverse: true);
   }
 
@@ -153,79 +216,71 @@ class _SliderFlowItemState extends State<_SliderFlowItem>
 
   @override
   Widget build(BuildContext context) {
-    final displayColor =
-    widget.isActive ? widget.activeColor : widget.inactiveColor;
     final bool isCurrent =
-        widget.isActive && widget.index == widget.currentValue - 1;
+        widget.index == widget.currentValue - 1 && widget.isActive;
+    final displayColor =
+    widget.index < widget.currentValue ? widget.activeColor : widget.inactiveColor;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // FIXED SIZE BOX TO PREVENT LINE SHIFT
         SizedBox(
           width: 20,
           height: 20,
           child: Center(
-            child: AnimatedBuilder(
+            child: isCurrent
+                ?
+            AnimatedBuilder(
               animation: _pulseController,
               builder: (context, child) {
-                final double scale = isCurrent
-                    ? 1.0 + 0.05 * _pulseController.value
-                    : 1.0;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.easeInOut,
-                  height: 20 * scale,
-                  width: 20 * scale,
-                  decoration: BoxDecoration(
-                    color: displayColor,
-                    borderRadius:
-                    BorderRadius.circular(widget.borderRadiusValue),
-                    boxShadow: widget.isActive
-                        ? [
-                      BoxShadow(
-                        color: widget.activeColor.withOpacity(0.7),
-                        blurRadius: isCurrent ? 12 : 6,
-                        spreadRadius: isCurrent ? 2 : 1,
-                      ),
-                    ]
-                        : [],
-                  ),
+                return Opacity(
+                  opacity: 0.5 + 0.5 * _pulseController.value,
+                  child: child,
                 );
               },
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: widget.activeColor,
+                  borderRadius: BorderRadius.circular(widget.borderRadiusValue),
+                ),
+              ),
+            )
+
+            : Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color:
+                widget.isActive ? widget.activeColor : widget.inactiveColor,
+                borderRadius:
+                BorderRadius.circular(widget.borderRadiusValue),
+              ),
             ),
           ),
         ),
 
-        // Horizontal connecting line
         Container(
           width: widget.isEndItem ? 8 : 10,
           height: 0.2,
           color: displayColor,
         ),
 
-        // Vertical line
         Container(
-          width: widget.isEndItem ? 5 : 1,
+          width: widget.isEndItem ? 5 : widget.verticalLineWidth,
           height: 30,
           decoration: BoxDecoration(
-            shape:
-            widget.isEndItem ? BoxShape.circle : BoxShape.rectangle,
-            color: displayColor,
+            color:  widget.verticalLineColor,
+            shape: widget.isEndItem ? BoxShape.circle : BoxShape.rectangle,
           ),
         ),
 
         SizedBox(width: widget.isEndItem ? 3 : 6),
 
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 150),
-          style: widget.textStyle.copyWith(
-            fontWeight: FontWeight.bold,
-            color: isCurrent ? widget.activeColor : widget.inactiveColor,
-          ),
-          child: Text('${widget.index + 1}'),
-        ),
+        Text(widget.itemLabel,style: widget.textStyle),
+
       ],
     );
   }
