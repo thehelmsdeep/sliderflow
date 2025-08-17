@@ -9,7 +9,7 @@
 
 
 ```dart
-            SliderFlow(
+             SliderFlow(
               count: 5,
               label: 'Label',
               onChanged: (int current) {},
@@ -31,5 +31,7 @@
                 ),
               ),
             ),
+
 ```
+
 
